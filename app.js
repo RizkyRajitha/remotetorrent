@@ -77,7 +77,7 @@ app.post("/remotetorrent/download", (req, res) => {
       torrent.files.forEach(function(file) {
         console.log(file.path);
         paths.push({ filepath: file.path, name: file.name });
-        // do something with file
+        // do something with file   
       });
 
       io.emit("downloaded" + sesisonid, { path: paths });
