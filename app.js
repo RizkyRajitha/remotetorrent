@@ -33,7 +33,15 @@ app.post("/remotetorrent/download", (req, res) => {
   console.log(req.body);
   //   res.json(req.body);
 
-  client.add(req.body.urltodown, { path: "./torrentfiles" }, function(torrent) {
+  //NODE_ENV=production node app.js
+
+  var path = '"./torrentfiles"';
+
+  if ((process.env.NODE_ENV = "production")) {
+    path = "/home/torrentclient/remotetorrent/torrentfiles";
+  }
+
+  client.add(req.body.urltodown, { path: path }, function(torrent) {
     // Torrents can contain many files. Let's use the .mp4 file
 
     var sesisonid = uuidv4();
