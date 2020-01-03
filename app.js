@@ -1,7 +1,7 @@
 const uuidv4 = require("uuid/v4");
-
+const path = require("path");
 const express = require("express");
-
+require("dotenv").config({ path: path.resolve(process.cwd(), ".env") });
 const app = express();
 
 const http = require("http").createServer(app);
@@ -21,6 +21,8 @@ app.set("view engine", "ejs");
 app.use(express.static("./views/pages"));
 
 var api = "";
+
+console.log(process.env.NODE_ENV);
 
 if ((process.env.NODE_ENV = "production")) {
   api = "/remotetorrent";
