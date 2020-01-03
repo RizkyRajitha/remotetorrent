@@ -94,7 +94,7 @@
 
       console.log(url);
 
-      fetch("http://localhost:3000/download", {
+      fetch("/remotetorrent/download", {
         method: "POST",
         body: JSON.stringify(obj),
         headers: {
