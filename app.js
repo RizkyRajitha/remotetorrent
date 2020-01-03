@@ -26,7 +26,7 @@ if ((process.env.NODE_ENV = "production")) {
   api = "/remotetorrent";
 }
 
-app.get("/", (req, res) => {
+app.get("/remotetorrent", (req, res) => {
   res.render("pages/share", {
     size: `11`,
     title: `11`,
@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.post("/download", (req, res) => {
+app.post("/remotetorrent/download", (req, res) => {
   console.log(req.body);
   //   res.json(req.body);
 
