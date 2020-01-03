@@ -20,7 +20,13 @@ app.set("view engine", "ejs");
 
 app.use(express.static("./views/pages"));
 
-app.get("/remotetorrent", (req, res) => {
+var api = "";
+
+if ((process.env.NODE_ENV = "production")) {
+  api = "/remotetorrent";
+}
+
+app.get("/", (req, res) => {
   res.render("pages/share", {
     size: `11`,
     title: `11`,
@@ -29,7 +35,7 @@ app.get("/remotetorrent", (req, res) => {
   });
 });
 
-app.post("/remotetorrent/download", (req, res) => {
+app.post("/download", (req, res) => {
   console.log(req.body);
   //   res.json(req.body);
 
