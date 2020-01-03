@@ -27,6 +27,7 @@ if ((process.env.NODE_ENV = "production")) {
 }
 
 app.get("/remotetorrent", (req, res) => {
+  // make in prod /remotetorrent
   res.render("pages/share", {
     size: `11`,
     title: `11`,
@@ -36,6 +37,7 @@ app.get("/remotetorrent", (req, res) => {
 });
 
 app.post("/remotetorrent/download", (req, res) => {
+  // make in prod /remotetorrent
   console.log(req.body);
   //   res.json(req.body);
 
