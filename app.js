@@ -45,65 +45,90 @@ app.post("/remotetorrent/download", (req, res) => {
 
   //NODE_ENV=production node app.js
 
-  var path = '"./torrentfiles"';
+  var downloadPath = path.resolve(__dirname, "./torrentfiles");
 
   if ((process.env.NODE_ENV = "production")) {
-    path = "/home/torrentclient/remotetorrent/torrentfiles";
+    downloadPath =
+      "/home/batman/remotetorrentclient/remotetorrent/torrentfiles";
   }
 
-  client.add(req.body.urltodown, { path: path }, function(torrent) {
-    // Torrents can contain many files. Let's use the .mp4 file
+  try {
+    client.add(req.body.urltodown, { path: downloadPath }, function(torrent) {
+      // Torrents can contain many files. Let's use the .mp4 file
+      console.log("adding client");
+      var sesisonid = uuidv4();
 
-    var sesisonid = uuidv4();
+      var file = torrent.files;
+      console.log(file[0].name);
 
-    var file = torrent.files;
-    console.log(file[0].name);
-    res.json({ name: torrent.files[0].name, uuid: sesisonid });
-    torrent.on("error", err => {
-      console.log(err);
-    });
+      var fileInfoarr = [];
 
-    torrent.on("download", function(bytes) {
-      //   console.log("peers : " + torrent.numPeers);
-      //   console.log("total downloaded: " + torrent.downloaded);
-      //   console.log(
-      //     "download speed: " + torrent.downloadSpeed / 1024 / 1024 + " mb "
-      //   );
-      console.log("progress: " + torrent.progress);
-
-      io.emit("downloadprogress" + sesisonid, {
-        downloadSpeed: torrent.downloadSpeed / 1024 / 1024 + " mb ",
-        progress: torrent.progress
+      torrent.files.forEach(element => {
+        var temp = {
+          name: element.name,
+          size: element.length / 1024 / 1024
+        };
+        fileInfoarr.push(temp);
       });
 
-      //downloadprogress
-    });
+      res.json({ fileInfo: fileInfoarr, uuid: sesisonid });
 
-    torrent.on("done", function() {
-      console.log("torrent finished downloading");
+      torrent.on("error", err => {
+        console.log("torrent error");
+        console.log(err);
+        io.emit("torrenterror" + sesisonid, { error: err });
+      });
 
-      var paths = [];
+      torrent.on("download", function(bytes) {
+        //   console.log("peers : " + torrent.numPeers);
+        //   console.log("total downloaded: " + torrent.downloaded);
+        //   console.log(
+        //     "download speed: " + torrent.downloadSpeed / 1024 / 1024 + " mb "
+        //   );
+        console.log("progress: " + torrent.progress);
 
-      torrent.files.forEach(function(file) {
-        console.log(file.path);
-        paths.push({
-          filepath: "http://54.197.16.19/static/" + file.path,
-          name: file.name
+        io.emit("downloadprogress" + sesisonid, {
+          downloadSpeed: torrent.downloadSpeed / 1024 / 1024 + " mb ",
+          progress: torrent.progress
         });
-        // do something with file
+
+        //downloadprogress
       });
 
-      io.emit("downloaded" + sesisonid, { path: paths });
+      torrent.on("done", function() {
+        console.log("torrent finished downloading");
+
+        var paths = [];
+
+        torrent.files.forEach(function(file) {
+          console.log(file.path);
+          paths.push({
+            filepath: "http://54.197.16.19/static/" + file.path,
+            name: file.name
+          });
+          // do something with file
+        });
+
+        io.emit("downloaded" + sesisonid, { path: paths });
+      });
+
+      torrent.on("noPeers", function(announceType) {
+        console.log("no " + announceType);
+      });
+
+      // setInterval(() => {
+      //   // console.log(" progress - " + torrent.progress);
+      // }, 1000);
     });
 
-    torrent.on("noPeers", function(announceType) {
-      console.log("no " + announceType);
+    client.on("error", function(err) {
+      console.log(err.message);
+      res.json({ error: err.message });
+      console.log("errrorrorrororororor1111");
     });
-
-    // setInterval(() => {
-    //   // console.log(" progress - " + torrent.progress);
-    // }, 1000);
-  });
+  } catch (error) {
+    console.log("errrorrorrororororor");
+  }
 });
 
 io.on("connection", function(socket) {

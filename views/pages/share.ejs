@@ -6,56 +6,58 @@
     <!-- views/partials/head.ejs -->
     <meta charset="UTF-8" />
     <meta name="theme-color" content="#000000" />
-    <meta property="og:url" content="https://airsharebetatest.herokuapp.com" />
+    <meta property="og:url" content="http://54.197.16.19/remotetorrent" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="AIRSHARE" />
+    <meta property="og:title" content="Easy Torrent" />
     <meta
       property="og:description"
-      content="<%= username %> shared  <%= title %>"
+      content="Your one click online torrent client"
     />
-    <meta name="description" content="<%= username %> shared  <%= title %>" />
-    <meta name="subject" content="AIRSHARE" />
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
 
-    <meta name="url" content="https://airsharebetatest.herokuapp.com" />
+    <meta name="description" content="Your one click online torrent client" />
+    <meta name="subject" content="Easy Torrent" />
+    <meta name="url" content="http://54.197.16.19/remotetorrent" />
     <meta
       property="og:image"
-      content="https://res.cloudinary.com/dijjqfsto/image/upload/v1576417849/share_rfdykh.png"
+      content="https://img.icons8.com/ios/500/000000/share-2.png"
     />
     <meta property="og:locale" content="si_LK" />
-    <title><%= title %></title>
+    <title>Easy Torrent</title>
 
     <!-- CSS (load bootstrap from a CDN) -->
-
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
-      href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
     />
     <style>
       body {
         padding-top: 50px;
+        font-family: "Montserrat", sans-serif;
+      }
+      #progreebarouterdiv {
+        display: none;
+        padding: 2%;
+        padding-left: 0%;
       }
     </style>
 
-    <style>
-      .progress {
-        display: none;
-        margin: 20px;
-        width: 80%;
-        height: 8px;
-      }
-    </style>
+    <style></style>
   </head>
   <body class="container">
     <header>
       <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
           <div class="navbar-header">
-            <a
-              class="navbar-brand"
-              href="https://airsharebetatest.herokuapp.com"
-            >
-              <img src="https://img.icons8.com/nolan/32/000000/share.png" />
-              AIRSHARE
+            <a class="navbar-brand" href="http://54.197.16.19/remotetorrent">
+              <img src="https://img.icons8.com/ios/25/000000/share-2.png" />
+              Easy Torrent
             </a>
           </div>
         </div>
@@ -64,20 +66,42 @@
 
     <main>
       <div class="jumbotron">
-        <h3>Enter file url to download</h3>
+        <!-- <h3>Enter file url to download</h3> -->
 
-        <input type="text" id="down-url" />
+        <h3>We accept Torrent Magnet Link and Torrent file Url</h3>
 
-        <button onclick="download()" type="button">submit</button>
+        <form onsubmit="return mySubmitFunction(event)">
+          <div class="form-group">
+            <input
+              placeholder="Enter Torrent Magnet Link or Torrent file Url"
+              class="form-control"
+              required
+              type="text"
+              id="down-url"
+            />
+          </div>
+          <button onclick="download()" class="btn btn-primary" type="submit">
+            Fetch
+          </button>
+        </form>
 
         <br />
-        <h3><%= size %></h3>
-
-        <div class="progress" id="progress"></div>
-
-        <div>
-          <span id="progresstext"></span>
+        <div id="progreebarouterdiv">
+          <div class="progress" id="download-progress-div">
+            <div
+              id="download-progress"
+              class="progress-bar progress-bar-striped progress-bar-animated"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+          <div>
+            <span id="progresstext"></span>
+          </div>
         </div>
+
+        <div id="files"></div>
 
         <div id="resources">
           <!-- <a href="http://" target="_blank"></a> -->
@@ -93,10 +117,10 @@
 
     <footer>
       <!-- views/partials/footer.ejs -->
-      <p class="text-center text-muted">© Copyright 2019 AIRSHARE.inc</p>
+      <p class="text-center text-muted">© Copyright 2020 Easy Torrent .inc</p>
     </footer>
   </body>
-
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
   <script src="https://cdn.rawgit.com/kimmobrunfeldt/progressbar.js/0.5.6/dist/progressbar.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
   <script>
@@ -104,7 +128,7 @@
 
     function download() {
       console.log("submit");
-      document.getElementById("progress").setAttribute("hidden", false);
+      // document.getElementById("progress").setAttribute("hidden", false);
       var url = document.getElementById("down-url").value;
 
       var obj = {
@@ -112,10 +136,6 @@
       };
 
       console.log(url);
-
-      var progressBar = document.getElementById("progress");
-
-      progressBar.style.display = "block";
 
       fetch("/remotetorrent/download", {
         method: "POST",
@@ -131,40 +151,85 @@
         .then(json => {
           console.log(json);
 
-          socket.on("downloadprogress" + json.uuid, function(msg) {
-            console.log(msg);
-            var bar = new ProgressBar.Line(progress, {
-              strokeWidth: 4,
-              easing: "easeInOut",
-              duration: 1400,
-              color: "#005EFB",
-              trailColor: "#eee",
-              trailWidth: 1,
-              svgStyle: { width: "100%", height: "100%" }
-            });
-            document.getElementById("progresstext").innerHTML =
-              msg.progress * 100 + "%";
-            bar.animate(msg.progress);
+          var str2 = "";
+          json.fileInfo.forEach(element => {
+            str2 =
+              str2 +
+              ` <span  > ${
+                element.name
+              } </span> <span>                   Size : ${Math.round(
+                element.size * 100
+              ) / 100} mb  </span>  <br></br>`;
           });
 
-          socket.on("downloaded" + json.uuid, function(msg) {
-            console.log(msg);
-            console.log("downloaded");
+          document.getElementById("files").innerHTML = str2;
 
-            var str = "";
+          if (json.error) {
+            console.log("err");
+            console.log(json.error);
+            // window.location.reload();
+            if (json.error === "Invalid torrent identifier") {
+              Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "invalid torrent"
+              });
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Something went wrong!"
+              });
+            }
+          } else {
+            socket.on("downloadprogress" + json.uuid, function(msg) {
+              console.log(msg);
 
-            msg.path.forEach(element => {
-              str =
-                str +
-                ` <a  href="${element.filepath}" target="_blank" >${element.name}</a>  <br></br>`;
+              var progreebarouterdiv = document.getElementById(
+                "progreebarouterdiv"
+              );
+              progreebarouterdiv.style.display = "block";
+
+              var progressBar = document.getElementById("download-progress");
+              progressBar.style.width = Math.round(msg.progress * 100) + "%";
+              progressBar.setAttribute(
+                "aria-valuenow",
+                Math.round(msg.progress * 100) + "%"
+              );
+
+              document.getElementById("progresstext").innerHTML =
+                Math.round(msg.progress * 100) + "%";
             });
 
-            document.getElementById("resources").innerHTML = str;
-          });
+            socket.on("torrenterror" + json.uuid, function(msg) {
+              console.log(msg.error);
+            });
+
+            socket.on("downloaded" + json.uuid, function(msg) {
+              console.log(msg);
+              console.log("downloaded");
+
+              var str = "";
+
+              msg.path.forEach(element => {
+                str =
+                  str +
+                  ` <a  href="${element.filepath}" target="_blank" >${element.name}</a>  <br></br>`;
+              });
+
+              document.getElementById("resources").innerHTML = str;
+            });
+          }
         })
         .catch(err => {
           console.log(err);
         });
+    }
+
+    function mySubmitFunction(e) {
+      e.preventDefault();
+      // someBug();
+      return false;
     }
   </script>
 </html>
